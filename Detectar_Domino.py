@@ -188,7 +188,7 @@ class DetectorDominoes:
 def obtener_estado(img_path):
     """Función principal para detectar fichas de dominó en una imagen"""
     # Ejemplo de uso
-    detector = DetectorDominoes(umbral_distancia=15)
+    detector = DetectorDominoes(umbral_distancia=35)
 
     # Procesar imagen a blanco y negro
     detector.procesar_imagen(img_path, "bw_intermediate.jpg")
@@ -196,10 +196,12 @@ def obtener_estado(img_path):
     # Detectar fichas
     fichas = detector.detectar_fichas(
         "bw_intermediate.jpg",
-        tamaño_aprox=3900,
-        original_path="Ejemplo-Domino.jpg",
+        tamaño_aprox=2900,
+        original_path=img_path,
         output_dir="fichas_borde"
     )
+
+    print(f"Se detectaron {len(fichas)} fichas de dominó.")
 
     # Obtener array de datos de fichas en bordes como solicitado
     return [ficha.datos for ficha in fichas if ficha.posicion_vecino is not None]
@@ -313,12 +315,17 @@ def obtener_valor_ficha(coordenadas, imagen_path):
         puntos_validos = []
         for contorno in contornos:
             area = cv2.contourArea(contorno)
+            # print(f"Area: {area}")
             perimetro = cv2.arcLength(contorno, True)
+            # print(f"Perimetro: {perimetro}")
             if perimetro > 0:
                 circularidad = 4 * np.pi * area / (perimetro * perimetro)
                 # Ajusta este umbral de circularidad (un valor cercano a 1 es más circular)
-                if 0.6 < circularidad < 1.0 and 10 < area < 100:
+                if 0.5 < circularidad <= 1.0 and 5 < area < 120:
                     puntos_validos.append(contorno)
+        
+        # cv2.imshow("Contornos", umbral)
+        # cv2.waitKey(0)
 
         num_puntos = len(puntos_validos)
 
@@ -364,6 +371,35 @@ def obtener_puntuacion_ficha(coordenadas, posicion_vecino, imagen_path, valor_co
     else:
         posicion_valor_a_encontrar = posicion_vecino
     
-    nueva_coordenadas = obtener_mitad(coordenadas, posicion_valor_a_encontrar)
+    if posicion_valor_a_encontrar == "":
+        print("Ficha de jugador")
+        puntuacion = []
+        nueva_coordenadas = obtener_mitad(coordenadas, "arriba")
+        puntuacion.append(obtener_valor_ficha(nueva_coordenadas, imagen_path))
+        nueva_coordenadas = obtener_mitad(coordenadas, "abajo")
+        puntuacion.append(obtener_valor_ficha(nueva_coordenadas, imagen_path))
+        return puntuacion
+    else:
+        nueva_coordenadas = obtener_mitad(coordenadas, posicion_valor_a_encontrar)
+        return obtener_valor_ficha(nueva_coordenadas, imagen_path)
 
-    return obtener_valor_ficha(nueva_coordenadas, imagen_path)
+def obtener_fichas_jugador(img_path):
+    """Función secundaria para detectar fichas de dominó en una imagen"""
+    # Ejemplo de uso
+    detector = DetectorDominoes(umbral_distancia=15)
+
+    # Procesar imagen a blanco y negro
+    detector.procesar_imagen(img_path, "bw_intermediate_player.jpg")
+
+    # Detectar fichas
+    fichas = detector.detectar_fichas(
+        "bw_intermediate_player.jpg",
+        tamaño_aprox=3900,
+        original_path=img_path,
+        output_dir="fichas_borde_jugador"
+    )
+
+    print(f"Se detectaron {len(fichas)} fichas de dominó.")
+
+    # Obtener array de datos de fichas en bordes como solicitado
+    return [ficha.datos for ficha in fichas]
