@@ -27,9 +27,6 @@ def obtener_estado_completo(img_path_tablero, img_path_jugador):
         print(f"  Número de vecinos: {ficha_data[2]}")
 
         img = Obtener_Ficha_Imagen(img_path_tablero, ficha_data[0])
-        cv2.imshow("Recorte", img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
 
         puntuacion = obtener_puntuacion_ficha(ficha_data[0], ficha_data[1],img_path_tablero, True)
         print(f"  Puntuación: {puntuacion}")
@@ -49,9 +46,6 @@ def obtener_estado_completo(img_path_tablero, img_path_jugador):
         fichas_jugador_data[i].append(puntuacion)
 
         img = Obtener_Ficha_Imagen(img_path_jugador, ficha_data[0])
-        cv2.imshow("Recorte", img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
 
     return fichas_borde_data, fichas_jugador_data, posibles_fichas
 
@@ -81,7 +75,7 @@ robot_controller = DominoRobotController(port=19999)
 
 if robot_controller.clientID != -1:
     # Movemos a posición inicial
-    robot_controller.move_joint_by_delta('joint1', 90)
+    robot_controller.move_posicion_inicial()
     time.sleep(2)
     
     # Obtener foto
@@ -98,7 +92,7 @@ if robot_controller.clientID != -1:
         cv2.imwrite("parte_superior.png", top_two_thirds)
         cv2.imwrite("parte_inferior.png", bottom_one_third)
     
-    robot_controller.move_joint_by_delta('joint1', -90)
+    robot_controller.move_posicion_recta()
     time.sleep(2)
     # Obtenemos coordenada
     fichas_borde_data, fichas_jugador_data, posibles_fichas = obtener_estado_completo("parte_superior.png", "parte_inferior.png")
@@ -109,9 +103,22 @@ if robot_controller.clientID != -1:
         real_x, real_y = pixel_to_world_linear(center_x, center_y)
         print(f"Ficha {i} del jugador: Coordenadas reales (x, y): ({real_x}, {real_y})")
 
-    # Ejemplo cinemática inversa para mover efector final
-    #robot_controller.move_domino(px=0.1, py=0.08, roll=0, yaw=90)
+        # Ejemplo cinemática inversa para mover efector final
+        if i == 0:
+            robot_controller.move_domino(px=real_x, py=real_y, roll=0, yaw=90)
+            time.sleep(2)
+            robot_controller.coger_ficha()
+            time.sleep(2)
+    
     time.sleep(3)
+
+    # Mover a posición de juego
+    robot_controller.move_posicion_recta()
+    time.sleep(2)
+
+    # Soltar ficha
+    robot_controller.soltar_ficha()
+    time.sleep(2)
 
     #robot_controller.move_joint_by_delta('joint3', -5)
 

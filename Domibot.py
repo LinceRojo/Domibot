@@ -38,8 +38,8 @@ class DominoRobotController:
         }
 
         # Sincronizar estado interno leyendo ángulos reales al inicio
-        if self.clientID != -1:
-            self._update_joint_angles_from_robot()
+        #if self.clientID != -1:
+        #    self._update_joint_angles_from_robot()
 
     def _define_symbols(self):
         (self.theta1, self.theta2, self.theta3, self.theta4, self.lc, self.la,
@@ -250,48 +250,51 @@ class DominoRobotController:
         img = np.flipud(img)
         
         return img
+    
+    def coger_ficha(self):
+        self.move_joint_by_delta('joint3', -5)
+        time.sleep(2)
+        # Activar la ventosa
+        res,retInts,retFloats,retStrings,retBuffer=sim.simxCallScriptFunction(self.clientID,'suctionPad', sim.sim_scripttype_childscript, 'setEffector', [1], [], [], '', sim.simx_opmode_blocking)
 
-def obtener_estado_completo(img_path_tablero, img_path_jugador):
-    """
-    Función para obtener el estado completo del juego de dominó.
-    """
-    fichas_borde_data = obtener_estado(img_path_tablero)
+        time.sleep(1)
+        self.move_joint_by_delta('joint3', 5)
+        time.sleep(2)
 
-    posibles_fichas = []
+    def soltar_ficha(self):
+        self.move_joint_by_delta('joint3', -5)
+        time.sleep(2)
+        # Activar la ventosa
+        res,retInts,retFloats,retStrings,retBuffer=sim.simxCallScriptFunction(self.clientID,'suctionPad', sim.sim_scripttype_childscript, 'setEffector', [0], [], [], '', sim.simx_opmode_blocking)
 
-    print("Fichas en bordes detectadas:")
-    for i, ficha_data in enumerate(fichas_borde_data):
-        print(f"Ficha {i}:")
-        print(f"  Coordenadas: {ficha_data[0]}")
-        print(f"  Vecino: {ficha_data[1]}")
-        print(f"  Número de vecinos: {ficha_data[2]}")
+        time.sleep(1)
+        self.move_joint_by_delta('joint3', 5)
+        time.sleep(2)
 
-        img = Obtener_Ficha_Imagen(img_path_tablero, ficha_data[0])
-        cv2.imshow("Recorte", img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+    def move_posicion_inicial(self):
+        """
+        Mueve el robot a una posición para tomar una foto inicial.
+        """
+        # Calculamos el angulo necesario para que joint1 y joint2 estén en posicion inicial
+        angulo_joint1 = 90 - self.joint_angles['joint1']* 180 / np.pi
+        angulo_joint2 = -self.joint_angles['joint2']* 180 / np.pi
 
-        puntuacion = obtener_puntuacion_ficha(ficha_data[0], ficha_data[1],img_path_tablero, True)
-        print(f"  Puntuación: {puntuacion}")
-        # Añadir la puntuación a la lista de datos de la ficha
-        fichas_borde_data[i].append(puntuacion)
-        posibles_fichas.append(puntuacion)
+        print(f"Moviendo a posición inicial: Joint1: {angulo_joint1}°, Joint2: {angulo_joint2}°")
+        self.move_joint_by_delta('joint1', angulo_joint1)
+        self.move_joint_by_delta('joint2', angulo_joint2)
+        time.sleep(2)
 
-    fichas_jugador_data = obtener_fichas_jugador(img_path_jugador)
+    def move_posicion_recta(self):
+        """
+        Mueve el robot a una posición recta
+        """
+        # Calculamos el angulo necesario para que joint1 y joint2 estén en una posición segura
+        angulo_joint1 = -self.joint_angles['joint1']* 180 / np.pi
+        angulo_joint2 = -self.joint_angles['joint2']* 180 / np.pi
 
-    print("Fichas del jugador disponibles:")
-    for i, ficha_data in enumerate(fichas_jugador_data):
-        print(f"Ficha {i}:")
-        print(f"  Coordenadas: {ficha_data[0]}")
-        puntuacion = obtener_puntuacion_ficha(ficha_data[0], ficha_data[1],img_path_jugador, True)
-        print(f"  Puntuación: {puntuacion[0]}, {puntuacion[1]}")
-        # Añadir la puntuación a la lista de datos de la ficha
-        fichas_jugador_data[i].append(puntuacion)
-
-        img = Obtener_Ficha_Imagen(img_path_jugador, ficha_data[0])
-        cv2.imshow("Recorte", img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        self.move_joint_by_delta('joint1', angulo_joint1)
+        self.move_joint_by_delta('joint2', angulo_joint2)
+        time.sleep(2)
 
 def pixel_to_world_linear(u, v,
                            img_resolution=(640, 480),
@@ -308,47 +311,3 @@ def pixel_to_world_linear(u, v,
     y_world = y_limits[0] + u_norm * (y_limits[1] - y_limits[0])
 
     return x_world, y_world
-
-
-
-
-# ----------------- USO ------------------
-
-if __name__ == "__main__":
-    robot_controller = DominoRobotController(port=19999)
-
-    if robot_controller.clientID != -1:
-        # Movemos a posición inicial
-        robot_controller.move_joint_by_delta('joint1', 90)
-        time.sleep(2)
-        
-        # Obtener foto
-        image = robot_controller.obtener_foto()
-        
-        # Separamos la imagen por la mitad (parte de arriba y de abajo) y lo guardamos en dos archivos
-        if image is not None:
-            # La imagen debe ser rgb
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            height, width, _ = image.shape
-            # La parte de arriba debe ser dos tercios de la imagen
-            top_two_thirds = image[:2*height//3, :]
-            bottom_one_third = image[2*height//3:, :]
-            cv2.imwrite("parte_superior.png", top_two_thirds)
-            cv2.imwrite("parte_inferior.png", bottom_one_third)
-        
-        robot_controller.move_joint_by_delta('joint1', -90)
-        time.sleep(2)
-        # Obtenemos coordenada
-        obtener_estado_completo("parte_superior.png", "parte_inferior.png")
-        
-        # Ejemplo cinemática inversa para mover efector final
-        robot_controller.move_domino(px=0.1, py=0.08, roll=0, yaw=90)
-        time.sleep(3)
-
-        robot_controller.move_joint_by_delta('joint3', -5)
-
-        time.sleep(2)
-        
-        robot_controller.disconnect()
-    else:
-        print("No se pudo inicializar el controlador del robot.")
