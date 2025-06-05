@@ -137,7 +137,7 @@ class DominoRobotController:
 
         self.joint_angles[joint_name] = new_angle_rad
 
-    def move_domino(self, px, py, roll, yaw):
+    def move_domino(self, px, py, roll, yaw, rotacion=0):
         if self.clientID == -1:
             print("No conectado a CoppeliaSim.")
             return
@@ -215,16 +215,25 @@ class DominoRobotController:
         try:
             sol = nsolve(equations, (theta1, theta2), initial_guess)
             th1_sol, th2_sol = sol
+            print(f"Solución encontrada: θ1={th1_sol.evalf():.3f}, θ2={th2_sol.evalf():.3f}")
+
+            angulo_joint1 = th1_sol * 180 / np.pi
+            angulo_joint2 = th2_sol * 180 / np.pi
+            angulo_joint4 = rotacion
+
+            self.move_joint_by_delta('joint1', angulo_joint1)
+            self.move_joint_by_delta('joint2', angulo_joint2)
+            self.move_joint_by_delta('joint4', -(angulo_joint1 + angulo_joint2)+angulo_joint4)  # Ajustar joint4 para mantener equilibrio
 
             # Enviar posiciones a CoppeliaSim
-            sim.simxSetJointTargetPosition(self.clientID, self.joint1, float(th1_sol), sim.simx_opmode_oneshot)
-            sim.simxSetJointTargetPosition(self.clientID, self.joint2, float(th2_sol), sim.simx_opmode_oneshot)
-            sim.simxSetJointTargetPosition(self.clientID, self.joint4, float(yaw), sim.simx_opmode_oneshot)
+            # sim.simxSetJointTargetPosition(self.clientID, self.joint1, float(th1_sol), sim.simx_opmode_oneshot)
+            # sim.simxSetJointTargetPosition(self.clientID, self.joint2, float(th2_sol), sim.simx_opmode_oneshot)
+            # sim.simxSetJointTargetPosition(self.clientID, self.joint4, float(yaw), sim.simx_opmode_oneshot)
 
             # Actualizar ángulos internos
-            self.joint_angles['joint1'] = float(th1_sol)
-            self.joint_angles['joint2'] = float(th2_sol)
-            self.joint_angles['joint4'] = float(yaw)
+            # self.joint_angles['joint1'] = float(th1_sol)
+            # self.joint_angles['joint2'] = float(th2_sol)
+            # self.joint_angles['joint4'] = float(yaw)
 
             print(f"✔️ Movimiento exitoso a XY ({px:.3f}, {py:.3f}).")
             print(f"Ángulos (rad): θ1={th1_sol.evalf():.3f}, θ2={th2_sol.evalf():.3f}, θ4={yaw:.3f}")
@@ -282,6 +291,7 @@ class DominoRobotController:
         print(f"Moviendo a posición inicial: Joint1: {angulo_joint1}°, Joint2: {angulo_joint2}°")
         self.move_joint_by_delta('joint1', angulo_joint1)
         self.move_joint_by_delta('joint2', angulo_joint2)
+        self.move_joint_by_delta('joint4', -(angulo_joint1+angulo_joint2))
         time.sleep(2)
 
     def move_posicion_recta(self):
@@ -294,11 +304,12 @@ class DominoRobotController:
 
         self.move_joint_by_delta('joint1', angulo_joint1)
         self.move_joint_by_delta('joint2', angulo_joint2)
+        self.move_joint_by_delta('joint4', -(angulo_joint1+angulo_joint2))  # Bajar un poco para evitar colisiones
         time.sleep(2)
 
 def pixel_to_world_linear(u, v,
                            img_resolution=(640, 480),
-                           x_limits=(0.025, 0.475),     # ← eje real X, controlado por v
+                           x_limits=(0.475, 0.025),     # ← eje real X, controlado por v
                            y_limits=(0.30, -0.30)):     # ← eje real Y, controlado por u
     width, height = img_resolution
 
