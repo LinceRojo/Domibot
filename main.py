@@ -1,4 +1,4 @@
-from Detectar_Domino import obtener_estado, Obtener_Ficha_Imagen, obtener_puntuacion_ficha, obtener_fichas_jugador
+from Detectar_Domino import obtener_estado, Obtener_Ficha_Imagen, obtener_puntuacion_ficha, obtener_fichas_jugador, es_horizontal_o_vertical
 from Reconocimiento_Voz import escuchar_y_detectar_comando_continuo
 import cv2
 import numpy as np
@@ -26,7 +26,12 @@ def obtener_estado_completo(img_path_tablero, img_path_jugador):
         print(f"  Puntuación: {puntuacion}")
         # Añadir la puntuación a la lista de datos de la ficha
         fichas_borde_data[i].append(puntuacion)
-        posibles_fichas.append(puntuacion)
+
+        if isinstance(puntuacion, list) and len(puntuacion) == 2:
+            # Si la puntuación es una lista, es una ficha doble
+            posibles_fichas.append(puntuacion[0])
+        elif isinstance(puntuacion, int):
+            posibles_fichas.append(puntuacion)
 
     fichas_jugador_data = obtener_fichas_jugador(img_path_jugador)
 
@@ -135,7 +140,13 @@ def obtener_fichas_posibles_donde_jugar(fichas_borde_data, valor_ficha_jugador):
         print(f"Procesando ficha en el borde: {ficha_data[0]} con vecino {ficha_data[1]} y puntuación {ficha_data[3]}")
         # Comprobamos si el valor de la ficha del jugador coincide con la puntuación de la ficha en el borde
         print(f"Comprobando ficha: {ficha_data[3]} contra valor del jugador: {valor_ficha_jugador}")
-        if ficha_data[3] == int(valor_ficha_jugador):
+        print(f"Tipo de ficha: {type(ficha_data[3])}, Comparar con: {int}")
+        if type(ficha_data[3]) == int:
+            valor_ficha = ficha_data[3]
+        else:
+            valor_ficha = ficha_data[3][0]
+        print(f"Valor de la ficha en el borde: {valor_ficha}")
+        if valor_ficha == int(valor_ficha_jugador):
             print(f"Valor de la ficha del jugador {valor_ficha_jugador} coincide con la ficha en el borde {ficha_data[3]}")
             fichas_posibles.append(ficha_data)
     
@@ -152,7 +163,9 @@ def calcular_coordenada_juego(ficha_posible):
     posibles_coordenadas = {}
     # Decidimos que direcciones posibles son:
     
-    if type(ficha_posible[2]) == list and len(ficha_posible[2]) == 2:
+    print(f"Ficha posible: {ficha_posible}")
+
+    if type(ficha_posible[3]) == list and len(ficha_posible[3]) == 2:
         # Si la ficha tiene dos valores, es una ficha doble, por tanto, puede jugarse en cualquier orientación excepto la del vecino
         direcciones = ["izquierda", "derecha", "arriba", "abajo"]
         direcciones.remove(ficha_posible[1])  # Eliminamos la dirección del vecino
@@ -166,32 +179,42 @@ def calcular_coordenada_juego(ficha_posible):
         elif ficha_posible[1] == "abajo":
             direcciones = ["arriba"]
 
-    orientacion = es_horizontal_o_vertical(ficha_posible)
     for direccion in direcciones:
+        orientacion = calcular_nueva_orientacion(ficha_posible, direccion)
         print(f"Coordenada antes de calcular: {ficha_posible[0]}")
         posibles_coordenadas[direccion] = calcular_coordenada_relativa(direccion, orientacion, ficha_posible)
         print(f"Coordenada calculada para {direccion}: {posibles_coordenadas[direccion]}")
     
     return posibles_coordenadas
 
-def es_horizontal_o_vertical(ficha):
+def calcular_nueva_orientacion(ficha_origen, direccion):
     """
-    Determina si la ficha es horizontal o vertical basándose en sus coordenadas.
-
-    Args:
-        ficha (FichaDomino): Objeto que contiene informacion de la ficha.
-
-    Returns:
-        str: "horizontal" si la ficha es horizontal, "vertical" si es vertical.
+    Calcula la nueva orientación de acuerdo a la ficha origen, si la ficha no es de la misma puntuacion en ambas partes,
+    la nueva ficha tendrá la misma orientación que la ficha origen.
+    Si la ficha origen es una ficha doble, la nueva orientación será la opuesta.
     """
-    x1, y1 = ficha[0]['x1'], ficha[0]['y1']
-    x2, y2 = ficha[0]['x2'], ficha[0]['y2']
-    
-    if abs(x2 - x1) > abs(y2 - y1):
-        return "horizontal"
+    print(f"Calculando nueva orientación para ficha origen: {ficha_origen} y dirección: {direccion}")
+    print(f"Puntuación de la ficha origen: {ficha_origen[3]}")
+    orientacion = es_horizontal_o_vertical(ficha_origen[0])
+    print(f"Orientación de la ficha origen: {orientacion}")
+    if type(ficha_origen[3]) == list and len(ficha_origen[3]) == 2:
+        print(f"La ficha origen es doble: {ficha_origen[3]}")
+        # Si la ficha es doble, la nueva orientación será la opuesta si la direccion es en el sentido de la orientacion
+        if direccion in ["izquierda", "derecha"]:
+            if orientacion == "horizontal":
+                return "vertical"
+            else:
+                return "horizontal"
+        elif direccion in ["arriba", "abajo"]:
+            if orientacion == "vertical":
+                return "vertical"
+            else:
+                return "horizontal"
     else:
-        return "vertical"
-    
+        # Si no es doble, mantenemos la misma orientación
+        return orientacion
+
+
 def calcular_coordenada_relativa(direccion, orientacion, ficha_origen):
     """
     Calcula las coordenadas donde se puede jugar una ficha en función de la dirección y la orientación.
@@ -206,7 +229,7 @@ def calcular_coordenada_relativa(direccion, orientacion, ficha_origen):
         tuple: Coordenadas (u, v) del centro donde se puede jugar la ficha.
     """
     # Tamaño aproximado de la ficha
-    orientacion_origen = es_horizontal_o_vertical(ficha_origen)
+    orientacion_origen = es_horizontal_o_vertical(ficha_origen[0])
     
     ANCHURA_FICHA = 40
     LONGITUD_FICHA = 80
@@ -216,6 +239,9 @@ def calcular_coordenada_relativa(direccion, orientacion, ficha_origen):
     offset_origen_x, offset_origen_y = calcular_offset(orientacion_origen, direccion, LONGITUD_FICHA, ANCHURA_FICHA)
     offset_nuevo_x, offset_nuevo_y = calcular_offset(orientacion, direccion, LONGITUD_FICHA, ANCHURA_FICHA)
 
+    print(f"Dirección: {direccion}")
+    print(f"Orientación origen: {orientacion_origen}")
+    print(f"Orientación nueva: {orientacion}")
     print(f"Offset origen: ({offset_origen_x}, {offset_origen_y})")
     print(f"Offset nuevo: ({offset_nuevo_x}, {offset_nuevo_y})")
 
@@ -243,21 +269,39 @@ def calcular_offset(orientacion, direccion, longitud_ficha, anchura_ficha):
         elif direccion == "derecha":
             return (longitud_ficha / 2, 0)
         elif direccion == "arriba":
-            return (0, anchura_ficha / 2)
-        elif direccion == "abajo":
             return (0, -anchura_ficha / 2)
+        elif direccion == "abajo":
+            return (0, anchura_ficha / 2)
     else:  # vertical
         if direccion == "izquierda":
             return (-anchura_ficha / 2, 0)
         elif direccion == "derecha":
             return (anchura_ficha / 2, 0)
         elif direccion == "arriba":
-            return (0, longitud_ficha / 2)
-        elif direccion == "abajo":
             return (0, -longitud_ficha / 2)
+        elif direccion == "abajo":
+            return (0, longitud_ficha / 2)
 
     return (0, 0)  # Por defecto no debería llegar aquí
 
+def calcular_rotacion(puntuacion_ficha_jugador, direccion, puntuacion_elegida):
+    """
+    Calcula la rotación necesaria para colocar la ficha en la dirección correcta.
+    Si la puntuación elegida esta en la primera posición de la ficha, la puntuación está arriba,
+    si está en la segunda posición, la puntuación está abajo.
+    """
+    diccionario_rotacion = {
+        "izquierda": 90,
+        "derecha": -90,
+        "arriba": 0,
+        "abajo": 180
+    }
+
+    if type(puntuacion_ficha_jugador) == list and len(puntuacion_ficha_jugador) == 2:
+        if puntuacion_elegida == puntuacion_ficha_jugador[0]:
+            return diccionario_rotacion[direccion]
+        else:
+            return (diccionario_rotacion[direccion] + 180) % 360
 
 # ------------ USO DEL ROBOT DOMINO -------------------
 
@@ -289,6 +333,7 @@ if robot_controller.clientID != -1:
     time.sleep(2)
     # Obtenemos coordenada
     fichas_borde_data, fichas_jugador_data, posibles_fichas = obtener_estado_completo("parte_superior.png", "parte_inferior.png")
+    print("Posibles fichas en el tablero:", posibles_fichas)
     fichas_jugador_data = ordenar_fichas_jugador_por_coordenadas(fichas_jugador_data)
     print("Fichas del jugador ordenadas de izquierda a derecha:")   
     for i, ficha_data in enumerate(fichas_jugador_data):
@@ -333,6 +378,7 @@ if robot_controller.clientID != -1:
             
             # Mover a posición de juego
             fichas_posibles = obtener_fichas_posibles_donde_jugar(fichas_borde_data, decision_jugador)
+            direccion = ""
             if fichas_posibles:
                 if len(fichas_posibles) > 1:
                     confirmar_posicion = True
@@ -343,20 +389,13 @@ if robot_controller.clientID != -1:
                 robot_controller.move_posicion_recta()
                 time.sleep(2)
 
-                # coordenadas_posicion = bbox_center(fichas_posibles[0][0])
-                # real_x_posicion, real_y_posicion = pixel_to_world_linear(coordenadas_posicion[0], coordenadas_posicion[1]+160)
-                # robot_controller.move_domino(px=real_x_posicion, py=real_y_posicion, roll=0, yaw=90)
-                time.sleep(2)
-
-                # Extra step de confirmar la posición (TODO)
-
                 # Solicitar al jugador posición relativa a la ficha y orientación
                 coordenada_calculada = calcular_coordenada_juego(fichas_posibles[0])
 
                 # Elegir direccion si hay más de una
                 if len(coordenada_calculada) > 1:
                     print(f"Hay varias posiciones posibles para jugar la ficha {decision_jugador}.")
-                    print(f"Posiciones posibles: {coordenada_calculada}")
+                    print(f"Posiciones posibles: {coordenada_calculada.keys()}")
                     # Pedir al jugador que elija una posición
                     direccion = input("¿En qué dirección quieres jugar la ficha? (izquierda, derecha, arriba, abajo): ")
                     if direccion in coordenada_calculada:
@@ -365,12 +404,15 @@ if robot_controller.clientID != -1:
                         print(f"Dirección {direccion} no válida. Usando la primera posición disponible.")
                         coordenada_calculada = list(coordenada_calculada.values())[0]
                 else:
+                    print(f"Solo hay una posición posible para jugar la ficha {coordenada_calculada.keys()}.")
+                    direccion = list(coordenada_calculada.keys())[0]
                     coordenada_calculada = list(coordenada_calculada.values())[0]
 
                 real_x_posicion, real_y_posicion = pixel_to_world_linear(coordenada_calculada[0], coordenada_calculada[1])
                 print(f"Coordenadas calculadas para jugar la ficha: {coordenada_calculada[0], coordenada_calculada[1]}")
                 print(f"Coordenadas reales para jugar la ficha: ({real_x_posicion}, {real_y_posicion})")
-                robot_controller.move_domino(px=real_x_posicion, py=real_y_posicion, roll=0, yaw=0, rotacion=90)
+                rotacion = calcular_rotacion(fichas_jugador_data[numero_ficha][3], direccion, decision_jugador)
+                robot_controller.move_domino(px=real_x_posicion, py=real_y_posicion, roll=0, yaw=0, rotacion=rotacion)
                 time.sleep(2)
                 # Soltar ficha
                 robot_controller.soltar_ficha()
@@ -382,20 +424,6 @@ if robot_controller.clientID != -1:
         else:
             print(f"El jugador ha seleccionado una ficha incorrecta. Las puntuaciones posibles son: {posibles_fichas}")
 
-
-    # for i, ficha_data in enumerate(fichas_jugador_data):
-    #     center_x, center_y = bbox_center(ficha_data[0])
-    #     print(f"Ficha {i} del jugador: Coordenadas del centro (u, v): ({center_x}, {center_y})")
-    #     real_x, real_y = pixel_to_world_linear(center_x, center_y)
-    #     print(f"Ficha {i} del jugador: Coordenadas reales (x, y): ({real_x}, {real_y})")
-
-    #     # Ejemplo cinemática inversa para mover efector final
-    #     if i == 0:
-    #         robot_controller.move_domino(px=real_x, py=real_y, roll=0, yaw=90)
-    #         time.sleep(2)
-    #         robot_controller.coger_ficha()
-    #         time.sleep(2)
-    
     time.sleep(3)
 
     # Mover a posición de juego

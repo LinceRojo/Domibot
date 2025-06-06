@@ -341,6 +341,25 @@ def obtener_valor_ficha(coordenadas, imagen_path):
         print(f"Ocurrió un error: {e}")
         return -1
     
+def es_horizontal_o_vertical(coordenadas):
+    """
+    Determina si la ficha es horizontal o vertical basándose en sus coordenadas.
+
+    Args:
+        ficha (FichaDomino): Objeto que contiene informacion de la ficha.
+
+    Returns:
+        str: "horizontal" si la ficha es horizontal, "vertical" si es vertical.
+    """
+    x1, y1 = coordenadas['x1'], coordenadas['y1']
+    x2, y2 = coordenadas['x2'], coordenadas['y2']
+    
+    if abs(x2 - x1) > abs(y2 - y1):
+        return "horizontal"
+    else:
+        return "vertical"
+
+    
 def obtener_puntuacion_ficha(coordenadas, posicion_vecino, imagen_path, valor_contrario=False):
     """
     Calcula la puntuación de una ficha de dominó en función de su posición y la
@@ -371,6 +390,11 @@ def obtener_puntuacion_ficha(coordenadas, posicion_vecino, imagen_path, valor_co
     else:
         posicion_valor_a_encontrar = posicion_vecino
     
+    if (posicion_vecino == "izquierda" or posicion_vecino == "derecha") and es_horizontal_o_vertical(coordenadas) == "vertical":
+        posicion_valor_a_encontrar = ""
+    elif (posicion_vecino == "arriba" or posicion_vecino == "abajo") and es_horizontal_o_vertical(coordenadas) == "horizontal":
+        posicion_valor_a_encontrar = ""
+
     if posicion_valor_a_encontrar == "":
         print("Ficha de jugador")
         puntuacion = []
