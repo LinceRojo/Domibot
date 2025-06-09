@@ -427,3 +427,46 @@ def obtener_fichas_jugador(img_path):
 
     # Obtener array de datos de fichas en bordes como solicitado
     return [ficha.datos for ficha in fichas]
+
+def obtener_estado_completo(img_path_tablero, img_path_jugador):
+    """
+    Función para obtener el estado completo del juego de dominó.
+    """
+    fichas_borde_data = obtener_estado(img_path_tablero)
+
+    posibles_fichas = []
+
+    print("Fichas en bordes detectadas:")
+    for i, ficha_data in enumerate(fichas_borde_data):
+        print(f"Ficha {i}:")
+        print(f"  Coordenadas: {ficha_data[0]}")
+        print(f"  Vecino: {ficha_data[1]}")
+        print(f"  Número de vecinos: {ficha_data[2]}")
+
+        img = Obtener_Ficha_Imagen(img_path_tablero, ficha_data[0])
+
+        puntuacion = obtener_puntuacion_ficha(ficha_data[0], ficha_data[1],img_path_tablero, True)
+        print(f"  Puntuación: {puntuacion}")
+        # Añadir la puntuación a la lista de datos de la ficha
+        fichas_borde_data[i].append(puntuacion)
+
+        if isinstance(puntuacion, list) and len(puntuacion) == 2:
+            # Si la puntuación es una lista, es una ficha doble
+            posibles_fichas.append(puntuacion[0])
+        elif isinstance(puntuacion, int):
+            posibles_fichas.append(puntuacion)
+
+    fichas_jugador_data = obtener_fichas_jugador(img_path_jugador)
+
+    print("Fichas del jugador disponibles:")
+    for i, ficha_data in enumerate(fichas_jugador_data):
+        print(f"Ficha {i}:")
+        print(f"  Coordenadas: {ficha_data[0]}")
+        puntuacion = obtener_puntuacion_ficha(ficha_data[0], ficha_data[1],img_path_jugador, True)
+        print(f"  Puntuación: {puntuacion[0]}, {puntuacion[1]}")
+        # Añadir la puntuación a la lista de datos de la ficha
+        fichas_jugador_data[i].append(puntuacion)
+
+        img = Obtener_Ficha_Imagen(img_path_jugador, ficha_data[0])
+
+    return fichas_borde_data, fichas_jugador_data, posibles_fichas
