@@ -104,7 +104,7 @@ def obtener_fichas_posibles_donde_jugar(fichas_borde_data, valor_ficha_jugador):
     
     return fichas_posibles
 
-def calcular_coordenada_juego(ficha_posible):
+def calcular_coordenada_juego(ficha_posible, ANCHURA_FICHA=40, LONGITUD_FICHA=80):
     """
     Calcula las coordenadas relativas a la ficha donde se puede jugar y devuelve un diccionario con las orientaciones y coordenadas.
     Args:
@@ -134,7 +134,7 @@ def calcular_coordenada_juego(ficha_posible):
     for direccion in direcciones:
         orientacion = calcular_nueva_orientacion(ficha_posible, direccion)
         print(f"Coordenada antes de calcular: {ficha_posible[0]}")
-        posibles_coordenadas[direccion] = calcular_coordenada_relativa(direccion, orientacion, ficha_posible)
+        posibles_coordenadas[direccion] = calcular_coordenada_relativa(direccion, orientacion, ficha_posible, ANCHURA_FICHA=ANCHURA_FICHA, LONGITUD_FICHA=LONGITUD_FICHA)
         print(f"Coordenada calculada para {direccion}: {posibles_coordenadas[direccion]}")
     
     return posibles_coordenadas
@@ -167,7 +167,7 @@ def calcular_nueva_orientacion(ficha_origen, direccion):
         return orientacion
 
 
-def calcular_coordenada_relativa(direccion, orientacion, ficha_origen):
+def calcular_coordenada_relativa(direccion, orientacion, ficha_origen, ANCHURA_FICHA = 40 ,LONGITUD_FICHA = 80):
     """
     Calcula las coordenadas donde se puede jugar una ficha en función de la dirección y la orientación.
 
@@ -182,9 +182,6 @@ def calcular_coordenada_relativa(direccion, orientacion, ficha_origen):
     """
     # Tamaño aproximado de la ficha
     orientacion_origen = es_horizontal_o_vertical(ficha_origen[0])
-    
-    ANCHURA_FICHA = 40
-    LONGITUD_FICHA = 80
 
     x_origen, y_origen = bbox_center(ficha_origen[0])
 

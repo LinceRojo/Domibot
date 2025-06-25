@@ -27,206 +27,229 @@ else:
 
 
 ## Comienza la logica del juego
-# Movemos a posición inicial
-if simulacion:
-    robot_controller_coppelia.move_posicion_inicial()
-else:
-    robot_controller_raspberry.move_posicion_inicial()
+continuar = True
 
-time.sleep(2)
-    
-# Obtener foto
-if simulacion:
-    image = robot_controller_coppelia.obtener_foto()
-else:
-    image = robot_controller_raspberry.obtener_foto()
-    
-# Separamos la imagen por la mitad (parte de arriba y de abajo) y lo guardamos en dos archivos
-if image is not None:
-    # La imagen debe ser rgb
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    cv2.imwrite("./Media_Stream/imagen_tablero.png", image)
-    height, width, _ = image.shape
-    # La parte de arriba debe ser dos tercios de la imagen
-    top_two_thirds = image[:2*height//3, :]
-    bottom_one_third = image[2*height//3:, :]
-    cv2.imwrite("./Media_Stream/parte_superior.png", top_two_thirds)
-    cv2.imwrite("./Media_Stream/parte_inferior.png", bottom_one_third)
-    print("Size parte superior:", top_two_thirds.shape)
-    print("Size parte inferior:", bottom_one_third.shape)
-
-if simulacion:
-    robot_controller_coppelia.move_posicion_recta()
-else:
-    robot_controller_raspberry.move_posicion_recta()
-
-time.sleep(2)
-
-# Obtenemos coordenada
-## TODO: Una vez tengamos las imagenes reales, las coordenadas deben ser calculadas en base a las imagenes reales y sus dimensiones
-fichas_borde_data, fichas_jugador_data, posibles_fichas = obtener_estado_completo("./Media_Stream/parte_superior.png", "./Media_Stream/parte_inferior.png")
-
-print("Posibles fichas en el tablero:", posibles_fichas)
-fichas_jugador_data = ordenar_fichas_jugador_por_coordenadas(fichas_jugador_data)
-
-print("Fichas del jugador ordenadas de izquierda a derecha:")   
-for i, ficha_data in enumerate(fichas_jugador_data):
-    print(f"Ficha {i}: Coordenadas: {ficha_data[0]}, Puntuación: {ficha_data[3]}")
-
-ficha_correcta = False
-while ficha_correcta == False:
+while continuar:
+    # Movemos a posición inicial
     if simulacion:
-        # Preguntar al jugador qué ficha quiere jugar, con una entrada de texto
-        numero_ficha = input("¿Qué ficha quieres jugar? (Introduce el número de la ficha): ")
-        numero_ficha = int(numero_ficha) if numero_ficha.isdigit() else None
+        robot_controller_coppelia.move_posicion_inicial()
     else:
-        # Escuchar el comando de voz del jugador
-        ## TODO: Implementar la funcion para usar el microfono del robot real
-        numero_ficha = escuchar_y_detectar_comando_continuo("¿Qué ficha quieres jugar?")
-        numero_ficha = int(numero_ficha) if numero_ficha.isdigit() else None
-        if numero_ficha is None:
-            print("No se ha detectado un número de ficha válido. Inténtalo de nuevo.")
-            continue
+        robot_controller_raspberry.move_posicion_inicial()
 
-    # Validar que el número de ficha es válido
-    hay_coincidencia, puntuaciones_posibles = obtener_valores_comunes_y_coincidencia(fichas_jugador_data[numero_ficha][3], posibles_fichas)
-    if hay_coincidencia:
-        ficha_correcta = True
-
-        print(f"El jugador ha decidido jugar la ficha con puntuación {numero_ficha}.")
-        center_x, center_y = bbox_center(fichas_jugador_data[numero_ficha][0])
+    time.sleep(2)
         
-        print(f"Ficha {i} del jugador: Coordenadas del centro (u, v): ({center_x}, {center_y+320})")
-        real_x, real_y = pixel_to_world_linear(center_x, center_y+320)
-        print(f"Ficha {i} del jugador: Coordenadas reales (x, y): ({real_x}, {real_y})")
+    # Obtener foto
+    if simulacion:
+        image = robot_controller_coppelia.obtener_foto()
+    else:
+        image = robot_controller_raspberry.obtener_foto()
+        
+    # Separamos la imagen por la mitad (parte de arriba y de abajo) y lo guardamos en dos archivos
+    if image is not None:
+        # La imagen debe ser rgb
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        cv2.imwrite("./Media_Stream/imagen_tablero.png", image)
+        height, width, _ = image.shape
+        # La parte de arriba debe ser dos tercios de la imagen
+        top_two_thirds = image[:2*height//3, :]
+        bottom_one_third = image[2*height//3:, :]
+        cv2.imwrite("./Media_Stream/parte_superior.png", top_two_thirds)
+        cv2.imwrite("./Media_Stream/parte_inferior.png", bottom_one_third)
+        print("Size parte superior:", top_two_thirds.shape)
+        print("Size parte inferior:", bottom_one_third.shape)
 
+    if simulacion:
+        robot_controller_coppelia.move_posicion_recta()
+    else:
+        robot_controller_raspberry.move_posicion_recta()
+
+    time.sleep(2)
+
+    if simulacion:
+        tamaño_ficha = 2900
+    else:
+        # TODO: Cambiar tamaño de ficha por el real
+        tamaño_ficha = 80
+
+    # Obtenemos coordenada
+    fichas_borde_data, fichas_jugador_data, posibles_fichas = obtener_estado_completo("./Media_Stream/parte_superior.png", "./Media_Stream/parte_inferior.png", tamaño_ficha=tamaño_ficha)
+
+    print("Posibles fichas en el tablero:", posibles_fichas)
+    fichas_jugador_data = ordenar_fichas_jugador_por_coordenadas(fichas_jugador_data)
+
+    print("Fichas del jugador ordenadas de izquierda a derecha:")   
+    for i, ficha_data in enumerate(fichas_jugador_data):
+        print(f"Ficha {i}: Coordenadas: {ficha_data[0]}, Puntuación: {ficha_data[3]}")
+
+    ficha_correcta = False
+    while ficha_correcta == False:
         if simulacion:
-            robot_controller_coppelia.move_domino(px=real_x, py=real_y, roll=0, yaw=90)
+            # Preguntar al jugador qué ficha quiere jugar, con una entrada de texto
+            numero_ficha = input("¿Qué ficha quieres jugar? (Introduce el número de la ficha): ")
+            numero_ficha = int(numero_ficha) if numero_ficha.isdigit() else None
         else:
-            robot_controller_raspberry.move_domino(px=real_x, py=real_y, roll=0, yaw=90)
-        
-        time.sleep(2)
-        
-        if simulacion:
-            robot_controller_coppelia.coger_ficha()
-        else:
-            robot_controller_raspberry.coger_ficha()
+            # Escuchar el comando de voz del jugador
+            numero_ficha, texto = escuchar_y_detectar_comando_continuo("¿Qué ficha quieres jugar?")
+            print(f"Comando detectado: {numero_ficha}, Texto completo: {texto}")
+            numero_ficha = int(numero_ficha) if numero_ficha.isdigit() else None
+            if numero_ficha is None:
+                print("No se ha detectado un número de ficha válido. Inténtalo de nuevo.")
+                continue
 
-        time.sleep(2)
+        # Validar que el número de ficha es válido
+        hay_coincidencia, puntuaciones_posibles = obtener_valores_comunes_y_coincidencia(fichas_jugador_data[numero_ficha][3], posibles_fichas)
+        if hay_coincidencia:
+            ficha_correcta = True
 
-        if len(puntuaciones_posibles) > 1:
-            puntuacion_valida = False
-            while not puntuacion_valida:
-                print(f"El jugador ha seleccionado una ficha con múltiples puntuaciones posibles: {puntuaciones_posibles}.")
-                # Pedimos al jugador que confirme el valor de la ficha
-
-                if simulacion:
-                    # Pedir al jugador que introduzca el valor de la ficha
-                    decision_jugador = input(f"¿Cuál es el valor de la ficha que quieres jugar? (Posibles valores: {puntuaciones_posibles}): ")
-                else:
-                    # Escuchar el comando de voz del jugador
-                    ## TODO: Implementar la función para usar el microfono del robot real
-                    decision_jugador = escuchar_y_detectar_comando_continuo("¿Cuál es el valor de la ficha que quieres jugar?")
-                
-                if decision_jugador.isdigit() and int(decision_jugador) in puntuaciones_posibles:
-                    print(f"El jugador ha confirmado que la ficha tiene el valor {decision_jugador}.")
-                    puntuacion_valida = True
-                else:
-                    print(f"El jugador ha seleccionado un valor incorrecto. Las puntuaciones posibles son: {puntuaciones_posibles}")
-                    puntuacion_valida = False
-        else:
-            decision_jugador = puntuaciones_posibles[0]
-        
-        # Mover a posición de juego
-        fichas_posibles = obtener_fichas_posibles_donde_jugar(fichas_borde_data, decision_jugador)
-        direccion = ""
-        if fichas_posibles:
-            if len(fichas_posibles) > 1:
-                confirmar_posicion = True
-            else:
-                confirmar_posicion = False
-
-            print(f"Posibles posiciones para jugar la ficha {decision_jugador}: {fichas_posibles}")
-
+            print(f"El jugador ha decidido jugar la ficha con puntuación {numero_ficha}.")
+            center_x, center_y = bbox_center(fichas_jugador_data[numero_ficha][0])
+            
+            ## Calcular coordenadas reales
             if simulacion:
-                robot_controller_coppelia.move_posicion_recta()
+                offset = 320
+                print(f"Ficha {i} del jugador: Coordenadas del centro (u, v): ({center_x}, {center_y+offset})")
+                real_x, real_y = pixel_to_world_linear(center_x, center_y+offset)
+                print(f"Ficha {i} del jugador: Coordenadas reales (x, y): ({real_x}, {real_y})")
             else:
-                robot_controller_raspberry.move_posicion_recta()
+                offset = 320 ########## TODO: CAMBIAR CUANDO TENGAMOS LAS IMAGENES REALES
+                print(f"Ficha {i} del jugador: Coordenadas del centro (u, v): ({center_x}, {center_y+offset})")
+                real_x, real_y = pixel_to_world_linear(center_x, center_y+offset, img_resolution=(640, 480), x_limits=(0.475, 0.025), y_limits=(0.30, -0.30))
+                print(f"Ficha {i} del jugador: Coordenadas reales (x, y): ({real_x}, {real_y})")
+                
+            if simulacion:
+                robot_controller_coppelia.move_domino(px=real_x, py=real_y, roll=0, yaw=90)
+            else:
+                robot_controller_raspberry.move_domino(px=real_x, py=real_y, roll=0, yaw=90)
+            
+            time.sleep(2)
+            
+            if simulacion:
+                robot_controller_coppelia.coger_ficha()
+            else:
+                robot_controller_raspberry.coger_ficha()
 
             time.sleep(2)
 
-            # Solicitar al jugador posición relativa a la ficha y orientación
-            if simulacion:
-                coordenada_calculada = calcular_coordenada_juego(fichas_posibles[0])
+            if len(puntuaciones_posibles) > 1:
+                puntuacion_valida = False
+                while not puntuacion_valida:
+                    print(f"El jugador ha seleccionado una ficha con múltiples puntuaciones posibles: {puntuaciones_posibles}.")
+                    # Pedimos al jugador que confirme el valor de la ficha
+
+                    if simulacion:
+                        # Pedir al jugador que introduzca el valor de la ficha
+                        decision_jugador = input(f"¿Cuál es el valor de la ficha que quieres jugar? (Posibles valores: {puntuaciones_posibles}): ")
+                    else:
+                        # Escuchar el comando de voz del jugador
+                        decision_jugador, texto = escuchar_y_detectar_comando_continuo("¿Cuál es el valor de la ficha que quieres jugar?")
+                        print(f"Comando detectado: {decision_jugador}, Texto completo: {texto}")
+                    
+                    if decision_jugador.isdigit() and int(decision_jugador) in puntuaciones_posibles:
+                        print(f"El jugador ha confirmado que la ficha tiene el valor {decision_jugador}.")
+                        puntuacion_valida = True
+                    else:
+                        print(f"El jugador ha seleccionado un valor incorrecto. Las puntuaciones posibles son: {puntuaciones_posibles}")
+                        puntuacion_valida = False
             else:
-                ## TODO: Implementar la función para calcular la coordenada de juego en el robot real
-                coordenada_calculada = ""
+                decision_jugador = puntuaciones_posibles[0]
+            
+            # Mover a posición de juego
+            fichas_posibles = obtener_fichas_posibles_donde_jugar(fichas_borde_data, decision_jugador)
+            direccion = ""
+            if fichas_posibles:
+                if len(fichas_posibles) > 1:
+                    confirmar_posicion = True
+                else:
+                    confirmar_posicion = False
 
-            # Elegir direccion si hay más de una
-            if len(coordenada_calculada) > 1:
-                print(f"Hay varias posiciones posibles para jugar la ficha {decision_jugador}.")
-                print(f"Posiciones posibles: {coordenada_calculada.keys()}")
+                print(f"Posibles posiciones para jugar la ficha {decision_jugador}: {fichas_posibles}")
 
-                # Pedir al jugador que elija una posición
                 if simulacion:
-                    direccion = input("¿En qué dirección quieres jugar la ficha? (izquierda, derecha, arriba, abajo): ")
+                    robot_controller_coppelia.move_posicion_recta()
                 else:
-                    # Escuchar el comando de voz del jugador
-                    ## TODO: Implementar la función para usar el microfono del robot real
-                    direccion = escuchar_y_detectar_comando_continuo("¿En qué dirección quieres jugar la ficha? (izquierda, derecha, arriba, abajo)")
-                
-                if direccion in coordenada_calculada:
-                    coordenada_calculada = coordenada_calculada[direccion]
+                    robot_controller_raspberry.move_posicion_recta()
+
+                time.sleep(2)
+
+                # Solicitar al jugador posición relativa a la ficha y orientación
+                if simulacion:
+                    coordenada_calculada = calcular_coordenada_juego(fichas_posibles[0])
                 else:
-                    print(f"Dirección {direccion} no válida. Usando la primera posición disponible.")
+                    ## TODO: Cambiar anchura y longitud de ficha por las reales
+                    coordenada_calculada = calcular_coordenada_juego(fichas_posibles[0], ANCHURA_FICHA=40, LONGITUD_FICHA=80)
+
+                # Elegir direccion si hay más de una
+                if len(coordenada_calculada) > 1:
+                    print(f"Hay varias posiciones posibles para jugar la ficha {decision_jugador}.")
+                    print(f"Posiciones posibles: {coordenada_calculada.keys()}")
+
+                    # Pedir al jugador que elija una posición
+                    if simulacion:
+                        direccion = input("¿En qué dirección quieres jugar la ficha? (izquierda, derecha, arriba, abajo): ")
+                    else:
+                        # Escuchar el comando de voz del jugador
+                        direccion, texto = escuchar_y_detectar_comando_continuo("¿En qué dirección quieres jugar la ficha? (izquierda, derecha, arriba, abajo)")
+                        print(f"Comando detectado: {direccion}, Texto completo: {texto}")
+                    
+                    if direccion in coordenada_calculada:
+                        coordenada_calculada = coordenada_calculada[direccion]
+                    else:
+                        print(f"Dirección {direccion} no válida. Usando la primera posición disponible.")
+                        coordenada_calculada = list(coordenada_calculada.values())[0]
+                else:
+                    print(f"Solo hay una posición posible para jugar la ficha {coordenada_calculada.keys()}.")
+                    direccion = list(coordenada_calculada.keys())[0]
                     coordenada_calculada = list(coordenada_calculada.values())[0]
-            else:
-                print(f"Solo hay una posición posible para jugar la ficha {coordenada_calculada.keys()}.")
-                direccion = list(coordenada_calculada.keys())[0]
-                coordenada_calculada = list(coordenada_calculada.values())[0]
 
-            # Calcular coordenadas reales
-            if simulacion:
-                real_x_posicion, real_y_posicion = pixel_to_world_linear(coordenada_calculada[0], coordenada_calculada[1])
-                print(f"Coordenadas calculadas para jugar la ficha: {coordenada_calculada[0], coordenada_calculada[1]}")
-                print(f"Coordenadas reales para jugar la ficha: ({real_x_posicion}, {real_y_posicion})")
-                rotacion = calcular_rotacion(fichas_jugador_data[numero_ficha][3], direccion, decision_jugador)
-                print(f"Rotacion: {rotacion}")
-            else:
-                ## TODO: Implementar la función para calcular las coordenadas reales en el robot real y la rotación
-                real_x_posicion, real_y_posicion = 0, 0
-                rotacion = 0
-            
-            # Mover a la posición de juego
-            if simulacion:
-                robot_controller_coppelia.move_domino(px=real_x_posicion, py=real_y_posicion, roll=0, yaw=0, rotacion=rotacion)
-            else:
-                robot_controller_raspberry.move_domino(px=real_x_posicion, py=real_y_posicion, roll=0, yaw=0, rotacion=rotacion)
-            
-            time.sleep(2)
+                # Calcular coordenadas reales
+                if simulacion:
+                    real_x_posicion, real_y_posicion = pixel_to_world_linear(coordenada_calculada[0], coordenada_calculada[1])
+                    print(f"Coordenadas calculadas para jugar la ficha: {coordenada_calculada[0], coordenada_calculada[1]}")
+                    print(f"Coordenadas reales para jugar la ficha: ({real_x_posicion}, {real_y_posicion})")
+                    rotacion = calcular_rotacion(fichas_jugador_data[numero_ficha][3], direccion, decision_jugador)
+                    print(f"Rotacion: {rotacion}")
+                else:
+                    # TODO: Updatear resolucion de imagen y limites de coordenadas reales
+                    real_x_posicion, real_y_posicion = pixel_to_world_linear(coordenada_calculada[0], coordenada_calculada[1], img_resolution=(640, 480), x_limits=(0.475, 0.025), y_limits=(0.30, -0.30))
+                    print(f"Coordenadas calculadas para jugar la ficha: {coordenada_calculada[0], coordenada_calculada[1]}")
+                    print(f"Coordenadas reales para jugar la ficha: ({real_x_posicion}, {real_y_posicion})")
+                    rotacion = calcular_rotacion(fichas_jugador_data[numero_ficha][3], direccion, decision_jugador)
+                    print(f"Rotacion: {rotacion}")
+                
+                # Mover a la posición de juego
+                if simulacion:
+                    robot_controller_coppelia.move_domino(px=real_x_posicion, py=real_y_posicion, roll=0, yaw=0, rotacion=rotacion)
+                else:
+                    robot_controller_raspberry.move_domino(px=real_x_posicion, py=real_y_posicion, roll=0, yaw=0, rotacion=rotacion)
+                
+                time.sleep(2)
 
-            # Soltar ficha
-            if simulacion:
-                robot_controller_coppelia.soltar_ficha()
-            else:
-                robot_controller_raspberry.soltar_ficha()
+                # Soltar ficha
+                if simulacion:
+                    robot_controller_coppelia.soltar_ficha()
+                else:
+                    robot_controller_raspberry.soltar_ficha()
 
-            print("Ficha soltada en la posición correcta.")
-            time.sleep(2)
+                print("Ficha soltada en la posición correcta.")
+                time.sleep(2)
+            else:
+                print(f"No hay posiciones disponibles para jugar la ficha {decision_jugador}.")
         else:
-            print(f"No hay posiciones disponibles para jugar la ficha {decision_jugador}.")
+            print(f"El jugador ha seleccionado una ficha incorrecta. Las puntuaciones posibles son: {posibles_fichas}")
+
+    time.sleep(3)
+
+    # Mover a posición de juego
+    if simulacion:
+        robot_controller_coppelia.move_posicion_recta()
     else:
-        print(f"El jugador ha seleccionado una ficha incorrecta. Las puntuaciones posibles son: {posibles_fichas}")
+        robot_controller_raspberry.move_posicion_recta()
 
-time.sleep(3)
+    time.sleep(2)
 
-# Mover a posición de juego
-if simulacion:
-    robot_controller_coppelia.move_posicion_recta()
-else:
-    robot_controller_raspberry.move_posicion_recta()
+    if (input("Quieres jugar otra ficha? (Presiona Enter para continuar o escribe 'n' para terminar): ") == 'n'):
+        continuar = False
 
-time.sleep(2)
 
 if simulacion:
     robot_controller_coppelia.disconnect()

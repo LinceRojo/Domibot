@@ -140,10 +140,6 @@ class ScaraControllerIntermediary:
 
     
     def move_domino(self, px, py, roll, yaw, rotacion=0):
-        if self.clientID == -1:
-            print("No conectado a CoppeliaSim.")
-            return
-
         # Convertir a radianes
         roll = np.deg2rad(roll)
         yaw = np.deg2rad(yaw)
@@ -174,7 +170,11 @@ class ScaraControllerIntermediary:
         py_corr = py + offset_global[1]
 
         # Verificación de alcance
-        alcance_max = 0.26 + 0.1425
+        ############ UPDATEAR CON LOS VALORES REALES DEL ROBOT ############
+        eje1 = 0.26
+        eje2 = 0.1425
+        ###########
+        alcance_max = eje1 + eje2
         r = np.hypot(px_corr, py_corr)
         if r > alcance_max:
             print(f"Error: el punto ({px_corr:.3f}, {py_corr:.3f}) está fuera del alcance del robot ({alcance_max:.3f} m).")
@@ -185,8 +185,8 @@ class ScaraControllerIntermediary:
 
         mbee_eval = self.mbee_symbolic.subs({
             self.lc: 0.2,
-            self.la: 0.26,
-            self.lb: 0.1425,
+            self.la: eje1,
+            self.lb: eje2,
             self.l4: 0.0981,
             self.theta1: theta1,
             self.theta2: theta2,
@@ -201,13 +201,13 @@ class ScaraControllerIntermediary:
 
         # Estimación inicial por geometría inversa simple
         try:
-            cos_theta2 = (r**2 - 0.26**2 - 0.1425**2) / (2 * 0.26 * 0.1425)
+            cos_theta2 = (r**2 - eje1**2 - eje2**2) / (2 * eje1 * eje2)
             if abs(cos_theta2) > 1:
                 print("Error: configuración geométrica imposible (cosθ2 fuera de [-1, 1]).")
                 return
 
             theta2_guess = np.arccos(cos_theta2)
-            theta1_guess = np.arctan2(py_corr, px_corr) - np.arctan2(0.1425 * np.sin(theta2_guess), 0.26 + 0.1425 * np.cos(theta2_guess))
+            theta1_guess = np.arctan2(py_corr, px_corr) - np.arctan2(eje2 * np.sin(theta2_guess), eje1 + eje2 * np.cos(theta2_guess))
 
             initial_guess = (theta1_guess, theta2_guess)
         except Exception as e:

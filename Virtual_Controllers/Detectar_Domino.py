@@ -185,7 +185,7 @@ class DetectorDominoes:
             )
             cv2.imwrite(output_path, ficha_img)
 
-def obtener_estado(img_path):
+def obtener_estado(img_path, tamaño_ficha=2900):
     """Función principal para detectar fichas de dominó en una imagen"""
     # Ejemplo de uso
     detector = DetectorDominoes(umbral_distancia=35)
@@ -196,7 +196,7 @@ def obtener_estado(img_path):
     # Detectar fichas
     fichas = detector.detectar_fichas(
         "./Media_Stream/bw_intermediate.jpg",
-        tamaño_aprox=2900,
+        tamaño_aprox=tamaño_ficha,
         original_path=img_path,
         output_dir="./Media_Stream/fichas_borde"
     )
@@ -428,11 +428,11 @@ def obtener_fichas_jugador(img_path):
     # Obtener array de datos de fichas en bordes como solicitado
     return [ficha.datos for ficha in fichas]
 
-def obtener_estado_completo(img_path_tablero, img_path_jugador):
+def obtener_estado_completo(img_path_tablero, img_path_jugador, tamaño_ficha=2900):
     """
     Función para obtener el estado completo del juego de dominó.
     """
-    fichas_borde_data = obtener_estado(img_path_tablero)
+    fichas_borde_data = obtener_estado(img_path_tablero, tamaño_ficha)
 
     posibles_fichas = []
 
