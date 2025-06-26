@@ -5,7 +5,7 @@ import time
 import RPi.GPIO as GPIO # Necessari per a la configuració GPIO del GestorInstancies
 
 # Importa el GestorInstancies
-from GestorInstancies import GestorInstancies
+from .GestorInstancies import GestorInstancies
 
 # Importa les classes dels controladors i gestors
 from .controladors.Camera import Camera
@@ -112,7 +112,9 @@ def init_robot_components(gestor_instancies: GestorInstancies, config_data: dict
             altaveu_config.get("nom"),
             Altaveu,
             nom_altaveu=altaveu_config.get("nom"),
-            device_label_alsa=altaveu_config.get("device_label_alsa")
+            device_label_alsa=altaveu_config.get("device_label_alsa"),
+            initial_tpa_gain_db=altaveu_config.get("initial_tpa_gain_db"),
+            tpa_i2c_address=altaveu_config.get("tpa_i2c_address")
         )
         if ins_altaveu:
             components_inicialitzats["altaveu"] = ins_altaveu
@@ -207,7 +209,7 @@ def init_robot_components(gestor_instancies: GestorInstancies, config_data: dict
                 components_inicialitzats["electroiman"] = ins_electroiman
                 print("Instància de Electroiman creada i configurada.")
             except Exception as e:
-                print(f"ERROR: No s'ha pogut configurar l'Electroiman: {e}")
+               print(f"ERROR: No s'ha pogut configurar l'Electroiman: {e}")
         else:
             print("ERROR: No s'ha pogut inicialitzar Electroiman.")
 
@@ -246,14 +248,15 @@ def init_robot_components(gestor_instancies: GestorInstancies, config_data: dict
         # --- Registre dels components amb FileManager ---
         print("\n--- Registrant instàncies de maquinari amb FileManager ---")
         
-
-        if ins_camara:
-            file_manager_instance.register_camera(ins_camara)
+        #if ins_camara:
+        #    file_manager_instance.register_camera(ins_camara)
         if ins_microphone:
             file_manager_instance.register_microphone(ins_microphone)
         if ins_altaveu:
             file_manager_instance.register_speaker(ins_altaveu)
         print("Registre de components amb FileManager completat.")
+
+
 
     # --- ScaraController ---
     print("\n--- Creant i configurant la instància de ScaraController ---")

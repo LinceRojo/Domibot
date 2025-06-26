@@ -1,0 +1,16 @@
+|Definir el volum:
+amixer set PCM <numero>%
+
+|Veure el volum:
+amixer get PCM
+|a de mostrar aixo:
+Simple mixer control 'PCM',0
+  Capabilities: pvolume pvolume-joined pswitch pswitch-joined
+  Playback channels: Mono
+  Limits: Playback -10239 - 400
+  Mono: Playback -1392 [83%] [-13.92dB] [on]
+
+
+//Tambe
+alsamixer
+

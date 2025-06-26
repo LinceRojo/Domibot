@@ -60,6 +60,18 @@ class FileManager:
         print(f"[FileManager ({self._default_prefix})]: Gestor inicialitzat. Directori base: '{self._base_directory_path}'.")
         print(f"[FileManager ({self._default_prefix})]: Arrel projecte: '{self._project_root}'.")
 
+    def __enter__(self):
+        """
+        Mètode que es crida quan s'entra al bloc 'with'.
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        S'executa quan es surt del bloc 'with', fins i tot si hi ha una exc>        Garanteix la neteja dels pins GPIO.
+        """
+        pass
+
     def __del__(self):
         """
         Mètode finalitzador. S'assegura que l'historial es guarda al disc

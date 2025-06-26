@@ -42,7 +42,8 @@ while continuar:
     if simulacion:
         image = robot_controller_coppelia.obtener_foto()
     else:
-        image = robot_controller_raspberry.obtener_foto()
+        image = img = cv2.imread("./Media_Example/Ejemplo-tablero-real.jpg")
+        #image = robot_controller_raspberry.obtener_foto()
         
     # Separamos la imagen por la mitad (parte de arriba y de abajo) y lo guardamos en dos archivos
     if image is not None:
@@ -68,11 +69,10 @@ while continuar:
     if simulacion:
         tamaño_ficha = 2900
     else:
-        # TODO: Cambiar tamaño de ficha por el real
-        tamaño_ficha = 80
+        tamaño_ficha = 32500
 
     # Obtenemos coordenada
-    fichas_borde_data, fichas_jugador_data, posibles_fichas = obtener_estado_completo("./Media_Stream/parte_superior.png", "./Media_Stream/parte_inferior.png", tamaño_ficha=tamaño_ficha)
+    fichas_borde_data, fichas_jugador_data, posibles_fichas = obtener_estado_completo("./Media_Stream/parte_superior.png", "./Media_Stream/parte_inferior.png", tamaño_ficha=tamaño_ficha, simulacion=simulacion)
 
     print("Posibles fichas en el tablero:", posibles_fichas)
     fichas_jugador_data = ordenar_fichas_jugador_por_coordenadas(fichas_jugador_data)
@@ -111,9 +111,9 @@ while continuar:
                 real_x, real_y = pixel_to_world_linear(center_x, center_y+offset)
                 print(f"Ficha {i} del jugador: Coordenadas reales (x, y): ({real_x}, {real_y})")
             else:
-                offset = 320 ########## TODO: CAMBIAR CUANDO TENGAMOS LAS IMAGENES REALES
+                offset = 822
                 print(f"Ficha {i} del jugador: Coordenadas del centro (u, v): ({center_x}, {center_y+offset})")
-                real_x, real_y = pixel_to_world_linear(center_x, center_y+offset, img_resolution=(640, 480), x_limits=(0.475, 0.025), y_limits=(0.30, -0.30))
+                real_x, real_y = pixel_to_world_linear(center_x, center_y+offset, img_resolution=(3280, 2464), x_limits=(0.50, 0.10), y_limits=(0.30, -0.30))
                 print(f"Ficha {i} del jugador: Coordenadas reales (x, y): ({real_x}, {real_y})")
                 
             if simulacion:
@@ -175,8 +175,7 @@ while continuar:
                 if simulacion:
                     coordenada_calculada = calcular_coordenada_juego(fichas_posibles[0])
                 else:
-                    ## TODO: Cambiar anchura y longitud de ficha por las reales
-                    coordenada_calculada = calcular_coordenada_juego(fichas_posibles[0], ANCHURA_FICHA=40, LONGITUD_FICHA=80)
+                    coordenada_calculada = calcular_coordenada_juego(fichas_posibles[0], ANCHURA_FICHA=135, LONGITUD_FICHA=270)
 
                 # Elegir direccion si hay más de una
                 if len(coordenada_calculada) > 1:
@@ -209,8 +208,7 @@ while continuar:
                     rotacion = calcular_rotacion(fichas_jugador_data[numero_ficha][3], direccion, decision_jugador)
                     print(f"Rotacion: {rotacion}")
                 else:
-                    # TODO: Updatear resolucion de imagen y limites de coordenadas reales
-                    real_x_posicion, real_y_posicion = pixel_to_world_linear(coordenada_calculada[0], coordenada_calculada[1], img_resolution=(640, 480), x_limits=(0.475, 0.025), y_limits=(0.30, -0.30))
+                    real_x_posicion, real_y_posicion = pixel_to_world_linear(coordenada_calculada[0], coordenada_calculada[1], img_resolution=(3280, 2464), x_limits=(0.50, 0.10), y_limits=(0.30, -0.30))
                     print(f"Coordenadas calculadas para jugar la ficha: {coordenada_calculada[0], coordenada_calculada[1]}")
                     print(f"Coordenadas reales para jugar la ficha: ({real_x_posicion}, {real_y_posicion})")
                     rotacion = calcular_rotacion(fichas_jugador_data[numero_ficha][3], direccion, decision_jugador)

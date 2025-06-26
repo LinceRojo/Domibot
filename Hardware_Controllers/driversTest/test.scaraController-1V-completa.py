@@ -9,10 +9,10 @@ import sys
 # Assegura't que els fitxers MotorPasAPas.py, Servomotor.py i Electroiman.py
 # es troben al mateix directori que aquest script de prova, o ajusta les rutes d'importació.
 try:
-    from drivers.controladors.MotorPasAPasNoNormalitzat import MotorPasAPas
-    from drivers.controladors.Servomotor import Servomotor
-    from drivers.controladors.Electroiman import Electroiman # Nova importació
-    from drivers.ScaraController import ScaraController # Importació de la classe a provar
+    from scripts.controladors.MotorPasAPasNoNormalitzat import MotorPasAPas
+    from scripts.controladors.Servomotor import Servomotor
+    from scripts.controladors.Electroiman import Electroiman # Nova importació
+    from scripts.ScaraController import ScaraController # Importació de la classe a provar
 except ImportError as e:
     print(f"ERROR: No s'ha pogut importar una de les classes de motor: {e}")
     print("Assegura't que els fitxers de les classes estan al mateix directori.")

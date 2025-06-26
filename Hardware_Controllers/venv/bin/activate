@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV=/home/pi/DominoScara/venv
+VIRTUAL_ENV=/home/pi/Entorns/Aux-2-DominoScara-H/venv
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

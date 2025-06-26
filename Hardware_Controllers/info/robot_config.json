@@ -1,0 +1,106 @@
+{
+  "gpio_settings": {
+    "mode": "BCM"
+  },
+  "motors_pas_a_pas": [
+    {
+      "id": "motor_base",
+      "nom": "Motor_Base",
+      "pins_in": [4, 17, 27, 22],
+      "passos_per_volta_motor": 32,
+      "reduccio_engranatge": 64.0,
+      "mode_passos": "half"
+    },
+    {
+      "id": "motor_articulacio_secundaria",
+      "nom": "Motor_Articulacio_Secundaria",
+      "pins_in": [24, 25, 8, 7],
+      "passos_per_volta_motor": 32,
+      "reduccio_engranatge": 64.0,
+      "mode_passos": "half"
+    },
+    {
+      "id": "motor_eix_z",
+      "nom": "Motor_Eix_Z",
+      "pins_in": [10, 9, 11, 5],
+      "passos_per_volta_motor": 32,
+      "reduccio_engranatge": 64.0,
+      "mode_passos": "half"
+    }
+  ],
+  "servomotor": {
+    "nom": "Motor_Canell",
+    "pin_gpio": 12,
+    "pwm_frequency": 50,
+    "duty_cycle_min": 2.190,
+    "duty_cycle_max": 12.290,
+    "angle_min_operational": 0,
+    "angle_max_operational": 180,
+    "angle_validation_min": 0.0,
+    "angle_validation_max": 180.0,
+    "duty_cycle_validation_min": 0.0,
+    "duty_cycle_validation_max": 100.0
+  },
+  "electroiman": {
+    "nom": "actuador_final_electroiman",
+    "pin_control": 26
+  },
+  "scara_controller": {
+    "nom": "scara_controller",
+    "config": {
+      "base": {
+        "limits": [-90.0, 90.0],
+        "speeds": [120.0, 60.0, 30.0],
+        "offset": 0.0,
+        "reduction_ratio": 1.0
+      },
+      "articulacio_secundaria": {
+        "limits": [0.0, 180.0],
+        "speeds": [120.0, 60.0, 30.0],
+        "offset": 0.0,
+        "reduction_ratio": 1.0
+      },
+      "eix_z": {
+        "limits": [-50.0, 50.0],
+        "speeds": [90.0, 45.0, 20.0],
+        "offset": 0.0,
+        "reduction_ratio": 1.0
+      },
+      "canell": {
+        "limits": [0.0, 180.0],
+        "speeds": [0.05, 0.1, 0.2],
+        "offset": 90.0,
+        "reduction_ratio": 1.0
+      }
+    }
+  },
+  "camera": {
+    "nom": "RPi_Cam",
+    "resolucio": [3280, 2464],
+    "default_extension": "jpg",
+    "default_metadata": null,
+    "mode_preview": false
+  },
+  "microphone": {
+    "nom": "MicSPH0645_Sinc",
+    "samplerate": 48000,
+    "channels": 1,
+    "device_index": null,
+    "dtype_gravacio": "int16",
+    "default_extension": "wav",
+    "default_metadata": null
+  },
+  "altaveu": {
+    "nom": "Altaveu_Mono",
+    "device_label_alsa": null,
+    "initial_tpa_gain_db": 0.0,
+    "tpa_i2c_address": "0x58"
+  },
+  "file_manager": {
+    "nom": "scara_controller",
+    "base_directory": "captures",
+    "default_prefix": "scara_robot",
+    "scripts_folder_name": "drivers",
+    "data_folder_name": "recursos"
+  }
+}

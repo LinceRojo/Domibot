@@ -65,14 +65,16 @@ class GestorInstancies:
         # No retornem True per propagar excepcions del gestor principal
 
     def _pasos_adicionals_enter(self, instancia_cm_obj):
-        if isinstance(instancia_cm_obj, ConnexioBDCM):
-            print(f"[Singleton] Executant passos addicionals d'entrada per ConnexioBDCM: '{instancia_cm_obj.bd_nom}'")
-            instancia_cm_obj.iniciar_pasos_adicionals()
+        pass
+        #if isinstance(instancia_cm_obj, ConnexioBDCM):
+        #    print(f"[Singleton] Executant passos addicionals d'entrada per ConnexioBDCM: '{instancia_cm_obj.bd_nom}'")
+        #    instancia_cm_obj.iniciar_pasos_adicionals()
             
     def _pasos_adicionals_exit(self, instancia_cm_obj):
-        if isinstance(instancia_cm_obj, ConnexioBDCM):
-            print(f"[Singleton] Executant passos addicionals de sortida per ConnexioBDCM: '{instancia_cm_obj.bd_nom}'")
-            instancia_cm_obj.finalitzar_pasos_adicionals()
+        pass
+        #if isinstance(instancia_cm_obj, ConnexioBDCM):
+        #    print(f"[Singleton] Executant passos addicionals de sortida per ConnexioBDCM: '{instancia_cm_obj.bd_nom}'")
+        #    instancia_cm_obj.finalitzar_pasos_adicionals()
             
             
     def configurar_gpio_mode(self, gpio_mode_str):
@@ -145,119 +147,3 @@ class GestorInstancies:
             return True
         print(f"[Singleton] La instància '{nom}' no estava registrada per destruir.")
         return False
-"""
-# --- Classes de prova que són Gestors de Context ---
-class ConnexioBDCM: 
-    def __init__(self, bd_nom):
-        self.bd_nom = bd_nom
-        self._connexio_activa = None
-        self.recurs_obtingut_de_enter = None 
-        print(f"[ConnexioBDCM] Inicialitzada per '{self.bd_nom}'.")
-    
-    def __enter__(self):
-        print(f"[ConnexioBDCM] --> __enter__: Obrint connexió a '{self.bd_nom}'...")
-        self._connexio_activa = f"Connexió a '{self.bd_nom}' activa"
-        return self._connexio_activa 
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        print(f"[ConnexioBDCM] --> __exit__: Tancant connexió a '{self.bd_nom}'.")
-        if self._connexio_activa:
-            self._connexio_activa = None
-        if exc_type:
-            print(f"[ConnexioBDCM] Excepció a DB '{self.bd_nom}': {exc_type.__name__}")
-        
-    def consultar(self, query):
-        if not self._connexio_activa:
-            raise RuntimeError("Connexió no oberta!")
-        print(f"[ConnexioBDCM] Executant '{query}' a '{self.bd_nom}' (usant '{self._connexio_activa}')")
-    
-    def iniciar_pasos_adicionals(self):
-        print(f"[ConnexioBDCM] Fent passos d'inici addicionals per '{self.bd_nom}'.")
-    
-    def finalitzar_pasos_adicionals(self):
-        print(f"[ConnexioBDCM] Fent passos de finalització addicionals per '{self.bd_nom}'.")
-
-class GestorArxiusCM:
-    def __init__(self, ruta):
-        self.ruta = ruta
-        self._arxiu_obert = None
-        self.recurs_obtingut_de_enter = None 
-        print(f"[GestorArxiusCM] Inicialitzat per a la ruta '{self.ruta}'.")
-    
-    def __enter__(self):
-        print(f"[GestorArxiusCM] --> __enter__: Obrint arxiu '{self.ruta}' en mode 'w'.")
-        self._arxiu_obert = open(self.ruta, "w")
-        return self._arxiu_obert 
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        print(f"[GestorArxiusCM] --> __exit__: Tancant arxiu '{self.ruta}'.")
-        if self._arxiu_obert and not self._arxiu_obert.closed:
-            self._arxiu_obert.close()
-            self._arxiu_obert = None
-        if exc_type:
-            print(f"[GestorArxiusCM] Excepció a l'arxiu '{self.ruta}': {exc_type.__name__}")
-
-    def escriure(self, text):
-        if not self._arxiu_obert:
-            raise RuntimeError("Arxiu no obert!")
-        self._arxiu_obert.write(text)
-        
-# --- EXEMPLE D'ÚS AMB LA CONFIGURACIÓ GPIO ---
-print("\n===== Inici del programa principal (amb configuració GPIO) =====")
-
-# IMPORTANT: Aquesta línia simula la disponibilitat de GPIO i els seus modes
-# Si no tens RPi.GPIO instal·lat, el codi es comportarà com si no estigués disponible.
-if GPIO:
-    # Aquests valors són els que RPi.GPIO utilitzaria internament
-    # Normalment, només passaries GPIO.BCM o GPIO.BOARD directament.
-    GPIO.BCM = 11
-    GPIO.BOARD = 10
-    print("Simulant RPi.GPIO disponible per a proves.")
-else:
-    print("RPi.GPIO no detectat. Les operacions GPIO seran omeses.")
-
-with GestorInstancies() as gestor:
-    # 1. Configura el mode GPIO (només es fa un cop)
-    # L'usuari ha de passar el valor numèric o la constant si GPIO està disponible
-    # Per exemple, si GPIO està disponible, passaries GPIO.BCM o GPIO.BOARD
-    if GPIO:
-        gestor.configurar_gpio_mode(GPIO.BCM) # Configuració amb GPIO.BCM
-        # gestor.configurar_gpio_mode(GPIO.BOARD) # O amb GPIO.BOARD
-
-    # 2. Creem i gestionem altres instàncies
-    db_conn_recurs = gestor.crear_i_entrar_instancia("db_principal", ConnexioBDCM, "central_database")
-    if db_conn_recurs:
-        db_obj_cm = gestor._instancies_registrades.get("db_principal")
-        if db_obj_cm:
-            db_obj_cm.consultar("SELECT username FROM users")
-
-    file_mgr_recurs = gestor.crear_i_entrar_instancia("temp_log", GestorArxiusCM, "temp_log.txt")
-    if file_mgr_recurs:
-        file_mgr_recurs.write("Log temporals del sistema.\n")
-        file_mgr_recurs.write("Més dades temporals.\n")
-    
-    # Podries tenir aquí alguna instància que utilitzés GPIO
-    # Per exemple:
-    # if GPIO:
-    #     class ControlLedCM:
-    #         def __init__(self, pin):
-    #             self.pin = pin
-    #             print(f"[ControlLedCM] Preparant per controlar el pin {self.pin}")
-    #         def __enter__(self):
-    #             GPIO.setup(self.pin, GPIO.OUT)
-    #             print(f"[ControlLedCM] Pin {self.pin} configurat com a sortida.")
-    #             return self
-    #         def __exit__(self, exc_type, exc_val, exc_tb):
-    #             GPIO.output(self.pin, GPIO.LOW) # Apagar el LED
-    #             GPIO.cleanup(self.pin) # Netejar el pin específic
-    #             print(f"[ControlLedCM] Pin {self.pin} netejat.")
-    #     
-    #     led_control = gestor.crear_i_entrar_instancia("led_verd", ControlLedCM, 17) # Pin GPIO 17
-    #     if led_control:
-    #         GPIO.output(17, GPIO.HIGH) # Encendre el LED
-    #         print("LED del pin 17 encès.")
-    #         # time.sleep(1) # Per veure'l encès un moment
-
-print("\n===== Final del programa principal =====")
-# Aquí veurem com GPIO.cleanup() s'executa si el mode es va configurar
-"""

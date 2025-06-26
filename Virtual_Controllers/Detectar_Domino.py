@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import os
 
+
 class FichaDomino:
     def __init__(self, indice, x, y, w, h, num_vecinos=0, puntuacion=-1, posicion_vecino=None, vecino_idx=None):
         self.indice = indice
@@ -65,20 +66,27 @@ class DetectorDominoes:
     def __init__(self, umbral_distancia=15):
         self.umbral_distancia = umbral_distancia
     
-    def procesar_imagen(self, original_path, bw_output_path):
+    def procesar_imagen(self, original_path, bw_output_path, simulacion=True):
         """Convierte la imagen original a blanco y negro para procesamiento"""
         img = cv2.imread(original_path)
         if img is None:
             raise FileNotFoundError(f"No se pudo leer la imagen en {original_path}")
         
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        lower_white = np.array([0, 0, 210])
-        upper_white = np.array([180, 30, 255])
-        white_mask = cv2.inRange(hsv, lower_white, upper_white)
+        if simulacion:
+            lower_white = np.array([0, 0, 210])
+            upper_white = np.array([180, 30, 255])
+            white_mask = cv2.inRange(hsv, lower_white, upper_white)
+        else:
+            lower_white = np.array([0, 0, 200])   # Bajamos un poco el brillo mínimo para capturar blancos más oscuros
+            upper_white = np.array([179, 50, 255])
+            white_mask = cv2.inRange(hsv, lower_white, upper_white)
+            
         cv2.imwrite(bw_output_path, white_mask)
+        print(f"Guardando imagen")
         return white_mask
     
-    def detectar_fichas(self, mascara_path, tamaño_aprox, original_path, output_dir="./Media_Stream/fichas_borde"):
+    def detectar_fichas(self, mascara_path, tamaño_aprox, original_path, output_dir="./Media_Stream/fichas_borde", simulacion= True):
         """Detecta fichas de dominó en la imagen y devuelve objetos FichaDomino"""
         mascara = cv2.imread(mascara_path, cv2.IMREAD_GRAYSCALE)
         original_img = cv2.imread(original_path)
@@ -185,20 +193,23 @@ class DetectorDominoes:
             )
             cv2.imwrite(output_path, ficha_img)
 
-def obtener_estado(img_path, tamaño_ficha=2900):
+def obtener_estado(img_path, tamaño_ficha=2900, simulacion=True):
     """Función principal para detectar fichas de dominó en una imagen"""
     # Ejemplo de uso
     detector = DetectorDominoes(umbral_distancia=35)
 
     # Procesar imagen a blanco y negro
-    detector.procesar_imagen(img_path, "./Media_Stream/bw_intermediate.jpg")
+    if not simulacion:
+        print("Procesando imagen en modo real...")
+    detector.procesar_imagen(img_path, "./Media_Stream/bw_intermediate.jpg", simulacion=simulacion)
 
     # Detectar fichas
     fichas = detector.detectar_fichas(
         "./Media_Stream/bw_intermediate.jpg",
         tamaño_aprox=tamaño_ficha,
         original_path=img_path,
-        output_dir="./Media_Stream/fichas_borde"
+        output_dir="./Media_Stream/fichas_borde",
+        simulacion=simulacion
     )
 
     print(f"Se detectaron {len(fichas)} fichas de dominó.")
@@ -293,7 +304,7 @@ def obtener_mitad(coordenadas, lado):
     print(f"Dirección '{lado}' no válida.")
     return coordenadas  # Devolver el diccionario original si el lado no es válido
 
-def obtener_valor_ficha(coordenadas, imagen_path):
+def obtener_valor_ficha(coordenadas, imagen_path, simulacion=True):
     """
     Obtiene el valor de una mitad de ficha de dominó a partir de sus coordenadas.
     """
@@ -315,17 +326,22 @@ def obtener_valor_ficha(coordenadas, imagen_path):
         puntos_validos = []
         for contorno in contornos:
             area = cv2.contourArea(contorno)
-            # print(f"Area: {area}")
+            #print(f"Area: {area}")
             perimetro = cv2.arcLength(contorno, True)
-            # print(f"Perimetro: {perimetro}")
+            #print(f"Perimetro: {perimetro}")
             if perimetro > 0:
                 circularidad = 4 * np.pi * area / (perimetro * perimetro)
+                #print(f"Circularidad: {circularidad}")
                 # Ajusta este umbral de circularidad (un valor cercano a 1 es más circular)
-                if 0.5 < circularidad <= 1.0 and 5 < area < 120:
-                    puntos_validos.append(contorno)
+                if simulacion:
+                    if 0.5 < circularidad <= 1.0 and 5 < area < 120:
+                        puntos_validos.append(contorno)
+                else:
+                    if 0.5 < circularidad <= 1.0 and 200 < area < 650:
+                        puntos_validos.append(contorno)
         
-        # cv2.imshow("Contornos", umbral)
-        # cv2.waitKey(0)
+        cv2.imshow("Contornos", umbral)
+        cv2.waitKey(0)
 
         num_puntos = len(puntos_validos)
 
@@ -360,7 +376,7 @@ def es_horizontal_o_vertical(coordenadas):
         return "vertical"
 
     
-def obtener_puntuacion_ficha(coordenadas, posicion_vecino, imagen_path, valor_contrario=False):
+def obtener_puntuacion_ficha(coordenadas, posicion_vecino, imagen_path, valor_contrario=False, simulacion=True):
     """
     Calcula la puntuación de una ficha de dominó en función de su posición y la
     posición de su vecino.
@@ -399,28 +415,29 @@ def obtener_puntuacion_ficha(coordenadas, posicion_vecino, imagen_path, valor_co
         print("Ficha de jugador")
         puntuacion = []
         nueva_coordenadas = obtener_mitad(coordenadas, "arriba")
-        puntuacion.append(obtener_valor_ficha(nueva_coordenadas, imagen_path))
+        puntuacion.append(obtener_valor_ficha(nueva_coordenadas, imagen_path, simulacion))
         nueva_coordenadas = obtener_mitad(coordenadas, "abajo")
-        puntuacion.append(obtener_valor_ficha(nueva_coordenadas, imagen_path))
+        puntuacion.append(obtener_valor_ficha(nueva_coordenadas, imagen_path, simulacion))
         return puntuacion
     else:
         nueva_coordenadas = obtener_mitad(coordenadas, posicion_valor_a_encontrar)
-        return obtener_valor_ficha(nueva_coordenadas, imagen_path)
+        return obtener_valor_ficha(nueva_coordenadas, imagen_path, simulacion)
 
-def obtener_fichas_jugador(img_path):
+def obtener_fichas_jugador(img_path, tamaño_ficha, simulacion=True):
     """Función secundaria para detectar fichas de dominó en una imagen"""
     # Ejemplo de uso
-    detector = DetectorDominoes(umbral_distancia=15)
+    detector = DetectorDominoes(umbral_distancia=35)
 
     # Procesar imagen a blanco y negro
-    detector.procesar_imagen(img_path, "./Media_Stream/bw_intermediate_player.jpg")
-
+    detector.procesar_imagen(img_path, "./Media_Stream/bw_intermediate_player.jpg", simulacion=simulacion)
+ 
     # Detectar fichas
     fichas = detector.detectar_fichas(
         "./Media_Stream/bw_intermediate_player.jpg",
-        tamaño_aprox=3900,
+        tamaño_aprox=tamaño_ficha,
         original_path=img_path,
-        output_dir="./Media_Stream/fichas_borde_jugador"
+        output_dir="./Media_Stream/fichas_borde_jugador",
+        simulacion=simulacion
     )
 
     print(f"Se detectaron {len(fichas)} fichas de dominó.")
@@ -428,11 +445,11 @@ def obtener_fichas_jugador(img_path):
     # Obtener array de datos de fichas en bordes como solicitado
     return [ficha.datos for ficha in fichas]
 
-def obtener_estado_completo(img_path_tablero, img_path_jugador, tamaño_ficha=2900):
+def obtener_estado_completo(img_path_tablero, img_path_jugador, tamaño_ficha=2900, simulacion=True):
     """
     Función para obtener el estado completo del juego de dominó.
     """
-    fichas_borde_data = obtener_estado(img_path_tablero, tamaño_ficha)
+    fichas_borde_data = obtener_estado(img_path_tablero, tamaño_ficha, simulacion=simulacion)
 
     posibles_fichas = []
 
@@ -445,7 +462,7 @@ def obtener_estado_completo(img_path_tablero, img_path_jugador, tamaño_ficha=29
 
         img = Obtener_Ficha_Imagen(img_path_tablero, ficha_data[0])
 
-        puntuacion = obtener_puntuacion_ficha(ficha_data[0], ficha_data[1],img_path_tablero, True)
+        puntuacion = obtener_puntuacion_ficha(ficha_data[0], ficha_data[1],img_path_tablero, True, simulacion=simulacion)
         print(f"  Puntuación: {puntuacion}")
         # Añadir la puntuación a la lista de datos de la ficha
         fichas_borde_data[i].append(puntuacion)
@@ -456,13 +473,13 @@ def obtener_estado_completo(img_path_tablero, img_path_jugador, tamaño_ficha=29
         elif isinstance(puntuacion, int):
             posibles_fichas.append(puntuacion)
 
-    fichas_jugador_data = obtener_fichas_jugador(img_path_jugador)
+    fichas_jugador_data = obtener_fichas_jugador(img_path_jugador, tamaño_ficha, simulacion=simulacion)
 
     print("Fichas del jugador disponibles:")
     for i, ficha_data in enumerate(fichas_jugador_data):
         print(f"Ficha {i}:")
         print(f"  Coordenadas: {ficha_data[0]}")
-        puntuacion = obtener_puntuacion_ficha(ficha_data[0], ficha_data[1],img_path_jugador, True)
+        puntuacion = obtener_puntuacion_ficha(ficha_data[0], ficha_data[1],img_path_jugador, True, simulacion=simulacion)
         print(f"  Puntuación: {puntuacion[0]}, {puntuacion[1]}")
         # Añadir la puntuación a la lista de datos de la ficha
         fichas_jugador_data[i].append(puntuacion)
@@ -470,3 +487,59 @@ def obtener_estado_completo(img_path_tablero, img_path_jugador, tamaño_ficha=29
         img = Obtener_Ficha_Imagen(img_path_jugador, ficha_data[0])
 
     return fichas_borde_data, fichas_jugador_data, posibles_fichas
+
+if __name__ == "__main__":
+    # Prueba con imagen real de ejemplo
+    #img_path = "./Media_Example/Ejemplo-tablero-real.jpg"
+
+    image = img = cv2.imread("./Media_Example/Ejemplo-tablero-real.jpg")
+        
+    # Separamos la imagen por la mitad (parte de arriba y de abajo) y lo guardamos en dos archivos
+    if image is not None:
+        # La imagen debe ser rgb
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        cv2.imwrite("./Media_Stream/imagen_tablero.png", image)
+        height, width, _ = image.shape
+        # La parte de arriba debe ser dos tercios de la imagen
+        top_two_thirds = image[:2*height//3, :]
+        bottom_one_third = image[2*height//3:, :]
+        cv2.imwrite("./Media_Stream/parte_superior.png", top_two_thirds)
+        cv2.imwrite("./Media_Stream/parte_inferior.png", bottom_one_third)
+        print("Size parte superior:", top_two_thirds.shape)
+        print("Size parte inferior:", bottom_one_third.shape)
+
+    tamaño_ficha = 32500
+
+    # Obtenemos coordenada
+    fichas_borde_data, fichas_jugador_data, posibles_fichas = obtener_estado_completo("./Media_Stream/parte_superior.png", "./Media_Stream/parte_inferior.png", tamaño_ficha=tamaño_ficha, simulacion=False)
+
+    print("Posibles fichas en el tablero:", posibles_fichas)
+
+    print("Fichas del jugador ordenadas de izquierda a derecha:")   
+    for i, ficha_data in enumerate(fichas_jugador_data):
+        print(f"Ficha {i}: Coordenadas: {ficha_data[0]}, Puntuación: {ficha_data[3]}")
+
+
+    # fichas_borde_data = obtener_estado(img_path, tamaño_ficha=32500, simulacion=False)
+
+    # posibles_fichas = []
+
+    # print("Fichas en bordes detectadas:")
+    # for i, ficha_data in enumerate(fichas_borde_data):
+    #     print(f"Ficha {i}:")
+    #     print(f"  Coordenadas: {ficha_data[0]}")
+    #     print(f"  Vecino: {ficha_data[1]}")
+    #     print(f"  Número de vecinos: {ficha_data[2]}")
+
+    #     img = Obtener_Ficha_Imagen(img_path, ficha_data[0])
+
+    #     puntuacion = obtener_puntuacion_ficha(ficha_data[0], ficha_data[1],img_path, True, simulacion=False)
+    #     print(f"  Puntuación: {puntuacion}")
+    #     # Añadir la puntuación a la lista de datos de la ficha
+    #     fichas_borde_data[i].append(puntuacion)
+
+    #     if isinstance(puntuacion, list) and len(puntuacion) == 2:
+    #         # Si la puntuación es una lista, es una ficha doble
+    #         posibles_fichas.append(puntuacion[0])
+    #     elif isinstance(puntuacion, int):
+    #         posibles_fichas.append(puntuacion)

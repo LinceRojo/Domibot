@@ -88,6 +88,18 @@ class ScaraController:
         self._print_current_angles()
         print("Preparat per rebre ordres.")
 
+
+    def __enter__(self):
+        """
+        Mètode que es crida quan s'entra al bloc 'with'.
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        S'executa quan es surt del bloc 'with', fins i tot si hi ha una exc>        """
+        pass
+
     def _validate_initial_config(self):
         """Comprova que la configuració inicial conté tots els paràmetres necessaris."""
         required_keys = ["limits", "speeds", "offset", "reduction_ratio"]
