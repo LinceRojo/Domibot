@@ -1,0 +1,101 @@
+[
+    {
+        "filepath": "/home/pi/Entorns/Aux-2-DominoScara-H/captures/scara_robot_audio_20250611_230905_808.wav",
+        "filename": "scara_robot_audio_20250611_230905_808.wav",
+        "timestamp": "2025-06-11T23:09:05.866864",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    },
+    {
+        "filepath": "/home/pi/Entorns/Aux-2-DominoScara-H/captures/scara_robot_audio_20250611_230958_822.wav",
+        "filename": "scara_robot_audio_20250611_230958_822.wav",
+        "timestamp": "2025-06-11T23:09:58.874608",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    },
+    {
+        "filepath": "/home/pi/Entorns/Aux-2-DominoScara-H/captures/scara_robot_audio_20250611_231939_107.wav",
+        "filename": "scara_robot_audio_20250611_231939_107.wav",
+        "timestamp": "2025-06-11T23:19:39.134110",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    },
+    {
+        "filepath": "/home/pi/Entorns/Aux-2-DominoScara-H/captures/scara_robot_audio_20250611_232011_954.wav",
+        "filename": "scara_robot_audio_20250611_232011_954.wav",
+        "timestamp": "2025-06-11T23:20:12.006098",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    },
+    {
+        "filepath": "/home/pi/Entorns/Aux-2-DominoScara-H/captures/scara_robot_audio_20250611_232038_869.wav",
+        "filename": "scara_robot_audio_20250611_232038_869.wav",
+        "timestamp": "2025-06-11T23:20:38.896782",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    },
+    {
+        "filepath": "/home/pi/Entorns/Aux-2-DominoScara-H/captures/scara_robot_audio_20250611_234508_341.wav",
+        "filename": "scara_robot_audio_20250611_234508_341.wav",
+        "timestamp": "2025-06-11T23:45:08.393019",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    },
+    {
+        "filepath": "/home/pi/Entorns/Aux-2-DominoScara-H/captures/scara_robot_audio_20250611_235021_103.wav",
+        "filename": "scara_robot_audio_20250611_235021_103.wav",
+        "timestamp": "2025-06-11T23:50:21.155085",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    },
+    {
+        "filepath": "/home/pi/Entorns/Aux-2-DominoScara-H/captures/scara_robot_audio_20250612_004108_899.wav",
+        "filename": "scara_robot_audio_20250612_004108_899.wav",
+        "timestamp": "2025-06-12T00:41:08.926387",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    },
+    {
+        "filepath": "/home/pi/Entorns/Aux-2-DominoScara-H/captures/scara_robot_audio_20250612_004205_703.wav",
+        "filename": "scara_robot_audio_20250612_004205_703.wav",
+        "timestamp": "2025-06-12T00:42:05.729896",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    }
+]

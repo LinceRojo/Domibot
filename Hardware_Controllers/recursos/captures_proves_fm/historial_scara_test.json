@@ -1,0 +1,56 @@
+[
+    {
+        "filepath": "/home/pi/DominoScara/dades/captures_proves_fm/scara_test_imatge_20250604_161536_891.jpg",
+        "filename": "scara_test_imatge_20250604_161536_891.jpg",
+        "timestamp": "2025-06-04T16:15:37.082826",
+        "content_type": "imatge",
+        "metadata": {}
+    },
+    {
+        "filepath": "/home/pi/DominoScara/dades/captures_proves_fm/scara_test_audio_20250604_161543_097.wav",
+        "filename": "scara_test_audio_20250604_161543_097.wav",
+        "timestamp": "2025-06-04T16:15:43.127100",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    },
+    {
+        "filepath": "/home/pi/DominoScara/dades/captures_proves_fm/scara_test_imatge_20250604_161652_263.jpg",
+        "filename": "scara_test_imatge_20250604_161652_263.jpg",
+        "timestamp": "2025-06-04T16:16:52.435712",
+        "content_type": "imatge",
+        "metadata": {}
+    },
+    {
+        "filepath": "/home/pi/DominoScara/dades/captures_proves_fm/scara_test_audio_20250604_161658_450.wav",
+        "filename": "scara_test_audio_20250604_161658_450.wav",
+        "timestamp": "2025-06-04T16:16:58.470843",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    },
+    {
+        "filepath": "/home/pi/DominoScara/dades/captures_proves_fm/scara_test_imatge_20250604_162423_805.jpg",
+        "filename": "scara_test_imatge_20250604_162423_805.jpg",
+        "timestamp": "2025-06-04T16:24:23.980602",
+        "content_type": "imatge",
+        "metadata": {}
+    },
+    {
+        "filepath": "/home/pi/DominoScara/dades/captures_proves_fm/scara_test_audio_20250604_162429_997.wav",
+        "filename": "scara_test_audio_20250604_162429_997.wav",
+        "timestamp": "2025-06-04T16:24:30.024117",
+        "content_type": "audio",
+        "metadata": {
+            "samplerate": 48000,
+            "channels": 2,
+            "duration_seconds": 5.0
+        }
+    }
+]

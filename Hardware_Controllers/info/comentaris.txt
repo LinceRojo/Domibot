@@ -1,0 +1,15 @@
+Comandments:
+
+
+ls
+--
+-> la "-l" es el mes informacio
+-> la "-a" es mostrar fichers ocults
+-> la "-R" es mostra recuribament tot el contingut d'una carpeta i al 
+     acabar comensa amb les carpetes interiors
+
+
+zip
+---
+-> la "-r" es el que fa la recusivitat per a fer comprimir una carpeta amb
+     el interior incos 

@@ -1,0 +1,4 @@
+picamera2
+sounddevice
+adafruit-circuitpython-tpa2016
+adafruit-blinka
